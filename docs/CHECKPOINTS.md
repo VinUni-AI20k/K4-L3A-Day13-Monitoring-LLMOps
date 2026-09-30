@@ -12,7 +12,7 @@ Lab diễn ra từ 14:00 đến 18:00, tổng thời lượng 240 phút. Mỗi c
 | CP3 | 16:40–17:30 (2:40–3:30) | Challenge chính thức | Root cause có metric, log và trace | evidence khớp challenge ID |
 | CP4 | 17:30–18:00 (3:30–4:00) | Báo cáo và demo | `REPORT.md`, evidence, commit SHA | full test + secret scan |
 
-Đây là bài cá nhân. Hãy cập nhật `submission/REPORT.md` và lưu evidence ngay sau mỗi checkpoint thay vì dồn toàn bộ sang CP4.
+Đây là bài cá nhân. Trong mỗi checkpoint, hãy ghi correlation ID, trace ID và kết quả vào `submission/REPORT.md`. Bộ 5 ảnh cuối chỉ chụp sau CP3 để một ảnh có thể chứng minh nhiều tiêu chí; CP4 dùng để lưu ba output text và kiểm tra link.
 
 ## CP0 Setup và baseline
 
@@ -111,7 +111,7 @@ Report dẫn được metric cụ thể, correlation ID/log line, trace ID, root
 ### Cần làm
 
 - Hoàn thiện báo cáo cá nhân duy nhất tại `submission/REPORT.md`.
-- Thu đủ evidence theo `docs/SUBMISSION.md`: tests/validators, logging/PII, traces, prompt rollback, dashboard và incident.
+- Thu đúng 3 output text và 5 ảnh runtime theo `docs/SUBMISSION.md`; tái sử dụng ảnh logging/tracing/dashboard cho incident, không chụp trùng.
 - Đặt evidence trong `submission/evidence/` và dẫn bằng đường dẫn tương đối.
 - Chạy lại tests và validators trên commit cuối.
 - Rà `.env`, secret, PII và file cache trước khi push.

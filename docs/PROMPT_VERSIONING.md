@@ -1,25 +1,25 @@
-# Prompt versioning từng bước
+# Prompt versioning — bản ngắn gọn
 
-Mục tiêu là chứng minh được một request đã dùng prompt version nào, sau đó deploy một version mới và rollback mà không sửa source code. Đây không phải bài thi viết prompt hay hoặc làm A/B testing.
+Mục tiêu là tạo hai version trong cùng một prompt, thử từng version, đưa v2 lên `production` rồi rollback về v1.
 
-## 1. Phân biệt name, version và label
+## Ba khái niệm cần nhớ
 
-- **Prompt name:** tên cố định `day13-chat`.
-- **Version:** một bản nội dung không thay đổi. Lưu nội dung mới sẽ tạo v2, v3…
-- **Label:** con trỏ có thể chuyển giữa các version. Bài lab dùng `baseline`, `candidate` và `production`.
+| Khái niệm | Trong bài lab |
+|---|---|
+| Prompt name | Luôn là `day13-chat` |
+| Version | v1 là bản cũ, v2 là bản mới |
+| Label | `baseline` → v1, `candidate` → v2, `production` → bản đang chạy |
 
-Ứng dụng lấy prompt theo name và label trong `.env`:
+App lấy prompt theo hai dòng trong `.env`:
 
 ```dotenv
 LANGFUSE_PROMPT_NAME=day13-chat
 LANGFUSE_PROMPT_LABEL=production
 ```
 
-Ví dụ, khi `production` trỏ tới v1, app lấy v1. Chuyển `production` sang v2 thì app lấy v2 mà không cần sửa code.
+## Bước 1 — Tạo v1
 
-## 2. Tạo version 1
-
-Trong project Langfuse cá nhân `day13-k4-l3a-<MSSV>`, mở **Prompt Management** và tạo **Text prompt**:
+Trong project Langfuse cá nhân, mở **Prompt Management** và tạo **Text prompt**:
 
 - Name: `day13-chat`
 - Labels: `baseline`, `production`
@@ -31,11 +31,11 @@ Docs={{docs}}
 Question={{message}}
 ```
 
-Không đổi tên hoặc xóa ba biến `{{feature}}`, `{{docs}}`, `{{message}}` vì code cần chúng để điền dữ liệu lúc chạy.
+Phải giữ đúng ba biến `{{feature}}`, `{{docs}}`, `{{message}}`.
 
-## 3. Tạo version 2
+## Bước 2 — Tạo v2
 
-Mở lại `day13-chat` và tạo version mới trong cùng prompt. Không tạo prompt name khác. Ví dụ:
+Mở lại `day13-chat` và tạo version mới trong cùng prompt, không tạo prompt name khác. Ví dụ:
 
 ```text
 Answer in no more than three concise bullet points.
@@ -44,68 +44,55 @@ Docs={{docs}}
 Question={{message}}
 ```
 
-Gắn label `candidate` cho v2. Kết quả cần có:
+Gắn label `candidate` cho v2. Label `latest` do Langfuse tự tạo không thay thế `candidate`.
 
-| Version | Label | Mục đích |
-|---|---|---|
-| v1 | `baseline`, `production` | Bản đang chạy ban đầu |
-| v2 | `candidate` | Bản mới cần kiểm tra |
+## Bước 3 — Kiểm tra hai version
 
-Langfuse tự chuyển `latest` sang version mới; không dùng `latest` thay cho các label của bài lab.
+Lần 1:
 
-## 4. Tạo trace cho baseline và candidate
-
-### Baseline v1
-
-1. Đặt `LANGFUSE_PROMPT_LABEL=baseline` trong `.env`.
-2. Dừng và chạy lại API để tránh dùng prompt đã cache.
+1. Đặt `LANGFUSE_PROMPT_LABEL=baseline`.
+2. Restart API.
 3. Chạy `python scripts/load_test.py`.
-4. Mở một trace mới và kiểm tra:
-   - `prompt_source=langfuse`;
-   - `prompt_name=day13-chat`;
-   - `prompt_label=baseline`;
-   - `prompt_version=1`.
-5. Ghi trace ID vào `submission/REPORT.md`.
+4. Ghi lại một trace ID có `prompt_label=baseline`, `prompt_version=1`.
 
-### Candidate v2
+Lần 2:
 
 1. Đổi thành `LANGFUSE_PROMPT_LABEL=candidate`.
-2. Dừng và chạy lại API.
-3. Chạy lại `python scripts/load_test.py` bằng cùng workload.
-4. Mở trace mới, xác nhận `prompt_label=candidate`, `prompt_version=2`.
-5. Ghi trace ID thứ hai vào report.
+2. Restart API và chạy lại cùng workload.
+3. Ghi lại một trace ID có `prompt_label=candidate`, `prompt_version=2`.
 
-## 5. Promote và rollback
+Hai trace ID được ghi vào `submission/REPORT.md`; không cần chụp riêng hai trace này.
 
-1. Trên Langfuse, chuyển label `production` từ v1 sang v2.
-2. Đặt `.env` thành `LANGFUSE_PROMPT_LABEL=production`, restart API và chạy một request.
-3. Xác nhận trace dùng `production` và version 2. Đây là **promote**.
-4. Chuyển `production` từ v2 về v1, restart API và chạy lại.
-5. Xác nhận trace dùng `production` và version 1. Đây là **rollback**.
+## Bước 4 — Promote và rollback
 
-## 6. Khi thấy `local-v1`
+1. Chuyển label `production` từ v1 sang v2 trên Langfuse.
+2. Đặt `LANGFUSE_PROMPT_LABEL=production`, restart API và chạy một request.
+3. Mở trace mới, xác nhận `prompt_label=production`, `prompt_version=2`; giữ tab này để chụp evidence.
+4. Chuyển label `production` từ v2 về v1. Đây là rollback.
+
+## Chỉ chụp một ảnh
+
+Tên file: `submission/evidence/04-prompt-versioning.png`.
+
+1. Sau rollback, mở trace `production` v2 ở một cửa sổ Langfuse.
+2. Mở trang versions của `day13-chat` ở cửa sổ thứ hai.
+3. Đặt hai cửa sổ cạnh nhau, thu gọn sidebar và zoom 80–90%.
+4. Bên trái phải thấy trace ID, `prompt_label=production`, `prompt_version=2`.
+5. Bên phải phải thấy `day13-chat`, v1 có `baseline` + `production`, v2 có `candidate`.
+6. Chụp toàn màn hình. Không mở trang API Keys và không để lộ secret/PII.
+
+Một ảnh này chứng minh cả promote lên v2 và rollback về v1.
+
+## Nếu không thấy đúng version
 
 - `prompt_source=local`: app chưa nhận Langfuse key.
-- `prompt_source=local-fallback`: app đã bật Langfuse nhưng fetch thất bại. Kiểm tra key thuộc đúng project, `LANGFUSE_BASE_URL`, prompt name và label.
-- Nếu đổi label nhưng vẫn thấy version cũ, restart API để xóa cache trong tiến trình cũ.
-- Nếu Langfuse báo thiếu biến, kiểm tra đúng ba tên `feature`, `docs`, `message` và cú pháp hai dấu ngoặc nhọn, ví dụ `{{message}}`.
+- `prompt_source=local-fallback`: kiểm tra project, key, base URL, prompt name và label.
+- Vẫn thấy version cũ: restart API vì SDK có cache prompt.
+- Báo thiếu biến: kiểm tra đúng `feature`, `docs`, `message` với hai dấu ngoặc nhọn.
 
-App dùng prompt local để không bị dừng khi Langfuse lỗi, nhưng trace `local-v1` không được tính là evidence prompt versioning.
+## Hoàn thành khi
 
-## 7. Evidence
-
-- `09-prompt-versions.png`: thấy prompt `day13-chat`, v1/v2 và các label.
-- Hai trace ID chứng minh `baseline` dùng v1 và `candidate` dùng v2.
-- `10-prompt-rollback.png`: thấy được `production` ở v2 và trạng thái sau rollback về v1. Nếu một ảnh khó đọc, tách thành `10a-production-v2.png` và `10b-rollback-v1.png`.
-- Ghi các trace ID và đường dẫn ảnh vào `submission/REPORT.md`.
-
-Không chụp trang API Keys, không để lộ secret và không dùng trace của người khác.
-
-## 8. Checklist hoàn thành
-
-- [ ] Chỉ có một prompt name `day13-chat`, bên trong có v1 và v2.
-- [ ] Cả hai version giữ đủ ba biến bắt buộc.
-- [ ] Trace baseline ghi version 1; trace candidate ghi version 2.
-- [ ] Đã chuyển `production` sang v2 và chạy kiểm tra.
-- [ ] Đã rollback `production` về v1 và chạy kiểm tra lại.
-- [ ] Evidence và trace ID đã được ghi trong báo cáo.
+- [ ] `day13-chat` có v1 và v2, giữ đủ ba biến.
+- [ ] Report có trace ID của baseline v1 và candidate v2.
+- [ ] Đã chạy `production` v2 và rollback `production` về v1.
+- [ ] Có đúng một ảnh `04-prompt-versioning.png` đọc được đầy đủ thông tin.

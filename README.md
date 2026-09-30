@@ -28,8 +28,8 @@ Sau lab, bạn có thể:
 
 - Source đã hoàn thiện các `TODO` bắt buộc.
 - `submission/REPORT.md` đã điền và evidence đặt trong `submission/evidence/`.
-- Kết quả tests, log validator và dashboard validator trên commit cuối.
-- Ảnh dashboard có dữ liệu; ít nhất 10 trace IDs; một trace waterfall; prompt v1/v2 và evidence rollback.
+- Ba output text cho tests, log validator và dashboard validator trên commit cuối.
+- Đúng 5 ảnh runtime theo `docs/SUBMISSION.md`; các ảnh được tái sử dụng để chứng minh logging, tracing, prompt, dashboard và incident.
 - Một SLO/error budget, ba alert symptom-based có `duration`, kênh Slack và runbook.
 
 ## Bắt đầu nhanh
@@ -152,6 +152,7 @@ git log -1 --oneline
 ```
 
 - [ ] Không có `.env`, secret, `.venv/`, PII thô hoặc evidence của học viên/lớp khác.
+- [ ] Có đúng 3 output text và 5 ảnh runtime theo `docs/SUBMISSION.md`.
 - [ ] `submission/REPORT.md` đã đủ; mọi ảnh dùng đường dẫn tương đối và mở được.
 - [ ] Bạn demo và giải thích được luồng Metrics → Logs → Traces → Root cause.
 
